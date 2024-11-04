@@ -19,14 +19,11 @@ This module provides an introduction to the fundamentals of working with spatial
 
 +++
 
-
-
 ### Background 
 
 In August 2020, [Christopher Schell](http://directory.tacoma.uw.edu/employee/cjschell) and collegues published a review in *Science* on ['The ecological and evolutionary consequences of systemic racism in urban environments'](https://science.sciencemag.org/content/early/2020/08/12/science.aay4497) (DOI: 10.1126/science.aay4497), showing how systematic racism and classism  has significant impacts on ecological and evolutionary processes within urban environments. Here we explore a subset of the data used to support these findings in this review and the broader literature.
 
 +++
-
 
 The [press release](https://www.washington.edu/news/2020/08/13/systemic-racism-has-consequences-for-all-life-in-cities/) on the paper is worth a read:
 
@@ -40,7 +37,6 @@ We are going to explore one metric for how structural racism and classism underp
 
 +++
 
-
 **Figure 2** in the Schell paper shows how NDVI (Normalized Difference Vegetation Index) tracks historical redlining.
 
 ```{image} attachment:23647e95-a23c-4eb8-a9bb-f0c91e45c1ac.png
@@ -49,7 +45,6 @@ We are going to explore one metric for how structural racism and classism underp
 ```
 
 +++
-
 
 We are going to recreate some of these city maps, and plot the distributions and mean vegetation patterns across cities to explore the structural inequality and racism that Schell et al highlight in their paper.
 
@@ -312,4 +307,19 @@ con.read_parquet("boston_stats.parquet").execute()
 
 ```{code-cell} ipython3
 city
+```
+
+```{code-cell} ipython3
+(city
+ .set_crs("EPSG:4326")
+ .to_file("new_haven.gpkg") # common open standard
+)
+
+
+# latest option, best performance but less widely known:
+city.set_crs("EPSG:4326").to_parquet("new_haven.parquet")
+```
+
+```{code-cell} ipython3
+
 ```
