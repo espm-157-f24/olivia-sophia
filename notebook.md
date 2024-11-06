@@ -197,22 +197,6 @@ ndvi.plot.imshow(row="time", cmap=cmap, add_colorbar=False, size=4)
 ```
 
 ```{code-cell} ipython3
-import leafmap.maplibregl as leafmap
-
-paint = {
-    "fill-color": ["get", "fill"],
-    "fill-opacity": 0.8,
-    "fill-outline-color": "#ffffff",
-}
-
-m = leafmap.Map(center=[-120, 38], zoom=5, style="positron")
-m = m.add_basemap("OpenStreetMap")
-m = m.add_gdf(city, layer_type = "fill", name="Redlining", paint=paint)
-m.to_html("docs/index.html", overwite=True)
-m
-```
-
-```{code-cell} ipython3
 from pystac_client import Client
 ```
 
@@ -258,6 +242,8 @@ ndvi = (
 )
 
 ndvi = ndvi.where(ndvi < 1).compute()
+
+# ndvi calculation  then compute the time. this is used in the ndvi.tif file
 ```
 
 ```{code-cell} ipython3
@@ -298,11 +284,13 @@ stats = exactextract.exact_extract("ndvi.tif",
                                    output = "pandas", 
                                    include_cols = ["category", "label", "fill"],
                                    include_geom = True)
-stats.to_parquet("boston_stats.parquet")
+stats.to_parquet("new_haven_stats.parquet")
+
+# show me that on average A values are higher than B values: show on the map or agragate statistics (bar chart or whatever)
 ```
 
 ```{code-cell} ipython3
-con.read_parquet("boston_stats.parquet").execute()
+con.read_parquet("new_haven_stats.parquet").execute()
 ```
 
 ```{code-cell} ipython3
@@ -318,6 +306,54 @@ city
 
 # latest option, best performance but less widely known:
 city.set_crs("EPSG:4326").to_parquet("new_haven.parquet")
+```
+
+```{code-cell} ipython3
+from exactextract import exact_extract
+import ibis
+from ibis import _
+```
+
+```{code-cell} ipython3
+con = ibis.duckdb.connect(extensions=["spatial"])
+
+redlines = (
+    con
+    .read_geo("/vsicurl/https://dsl.richmond.edu/panorama/redlining/static/mappinginequality.gpkg")
+    .filter(_.city == "New Haven", _.residential)
+   )
+```
+
+```{code-cell} ipython3
+city =  redlines.execute().set_crs("EPSG:4326")
+```
+
+```{code-cell} ipython3
+city_stats = exact_extract("ndvi.tif", 
+                           city, 
+                           ["mean"], 
+                           include_geom = True,
+                           include_cols=["label", "grade", "city", "fill"],
+                           output="pandas")
+
+city_stats.head()
+```
+
+```{code-cell} ipython3
+city_stats.to_parquet("new_haven_stats.parquet")
+```
+
+```{code-cell} ipython3
+new_haven_stats =  con.read_parquet("new_haven.parquet").execute()
+```
+
+```{code-cell} ipython3
+import leafmap.maplibregl as leafmap
+m = leafmap.Map()
+m.add_cog_layer("https://espm-157-f24.github.io/olivia-sophia/ndvi.tif", palette = "greens")
+m.add_gdf(new_haven_stats)
+m.add_layer_control()
+m
 ```
 
 ```{code-cell} ipython3
