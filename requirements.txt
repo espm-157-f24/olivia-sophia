@@ -2,3 +2,9 @@ pandas
 seaborn
 ibis-framework[duckdb]
 nbval
+geopandas
+pystac-client
+odc-stac
+rioxarray
+exactextract
+git+https://github.com/eodaGmbH/py-maplibregl@feature/color-utils
