@@ -309,6 +309,19 @@ city.set_crs("EPSG:4326").to_parquet("new_haven.parquet")
 ```
 
 ```{code-cell} ipython3
+new_haven_stats =  con.read_parquet("new_haven.parquet").execute()
+```
+
+```{code-cell} ipython3
+import leafmap.maplibregl as leafmap
+m = leafmap.Map()
+m.add_cog_layer("https://espm-157-f24.github.io/olivia-sophia/ndvi.tif", palette = "greens")
+m.add_gdf(new_haven_stats)
+m.add_layer_control()
+m
+```
+
+```{code-cell} ipython3
 from exactextract import exact_extract
 import ibis
 from ibis import _
@@ -344,16 +357,21 @@ city_stats.to_parquet("new_haven_stats.parquet")
 ```
 
 ```{code-cell} ipython3
-new_haven_stats =  con.read_parquet("new_haven.parquet").execute()
-```
+# construct the rest of the ibis code to compute the average NDVI by grade
+# use groupby and aggregate, create table NDVI for all sections
 
-```{code-cell} ipython3
-import leafmap.maplibregl as leafmap
-m = leafmap.Map()
-m.add_cog_layer("https://espm-157-f24.github.io/olivia-sophia/ndvi.tif", palette = "greens")
-m.add_gdf(new_haven_stats)
-m.add_layer_control()
-m
+city = con.read_parquet("new_haven_stats.parquet")
+
+# Compute the average NDVI by grade
+ndvi_by_grade = (
+    city
+    .group_by("grade")
+    .aggregate(mean_ndvi = city["mean"].mean())
+    .order_by("grade")
+)
+
+# Display the results
+ndvi_by_grade.execute()
 ```
 
 ```{code-cell} ipython3
