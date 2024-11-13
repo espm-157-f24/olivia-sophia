@@ -285,9 +285,38 @@ stats = exactextract.exact_extract("ndvi.tif",
                                    include_cols = ["category", "label", "fill"],
                                    include_geom = True)
 stats.to_parquet("new_haven_stats.parquet")
-
-# show me that on average A values are higher than B values: show on the map or agragate statistics (bar chart or whatever)
 ```
+
+The bar chart demonstrates how Grade A regions, which have historically benefited from better vegetation, continue to do so.
+The fact that there is substantially less vegetation in lower-grade locations, especially Grade D, illustrates how historical socioeconomic policies still have an effect on environmental health.
+
+```{code-cell} ipython3
+import pandas as pd
+import matplotlib.pyplot as plt
+# CREATE A BAR CHART DISPLAYING THE RESULTS OF AVERAGE NDVI BY GRADE
+# shows that on average A values are higher than B values
+# execute the query and get the results as a pandas DataFrame
+# Load the data
+stats = pd.read_parquet("new_haven_stats.parquet")
+
+# Calculate average NDVI by grade
+ndvi_by_grade = stats.groupby("grade")["mean"].mean().reset_index()
+
+# Sort grades in the correct order (A, B, C, D)
+ndvi_by_grade['grade'] = pd.Categorical(ndvi_by_grade['grade'], categories=['A', 'B', 'C', 'D'], ordered=True)
+ndvi_by_grade = ndvi_by_grade.sort_values(by="grade")
+
+# Plot the average NDVI by grade
+plt.figure(figsize=(10, 6))
+plt.bar(ndvi_by_grade["grade"], ndvi_by_grade["mean"], color='green', edgecolor='black')
+plt.xlabel("Grade")
+plt.ylabel("Average NDVI")
+plt.title("Average NDVI by Grade in New Haven")
+plt.ylim(0, 1)  # NDVI values typically range between -1 and 1
+plt.show()
+```
+
+A bar chart of average NDVI by redlining grade is displayed above. This visual comparison shows vegetation distribution based on historical redlining, highlighting environmental inequities.
 
 ```{code-cell} ipython3
 con.read_parquet("new_haven_stats.parquet").execute()
@@ -327,6 +356,12 @@ import ibis
 from ibis import _
 ```
 
+This explores the connection between vegetation health (NDVI) and historical redlining grades (A, B, C, and D).
+We predict a trend where Grade A locations have higher NDVI because of past investment patterns, while Grades C and D may exhibit lower NDVI because of long-standing disinvestment in these areas. Higher NDVI indicates healthier vegetation.
+Grade A: Considered as the "best" neighborhoods, these regions are usually well-resourced, primarily white, and middle-class to upper-class.
+Grades B and C: Generally seen as less desirable, these resources have moderate levels of socioeconomic diversity.
+Grade D: Little to no investment was made in historically "hazardous" locations, usually inhabited by underprivileged groups.
+
 ```{code-cell} ipython3
 con = ibis.duckdb.connect(extensions=["spatial"])
 
@@ -340,6 +375,13 @@ redlines = (
 ```{code-cell} ipython3
 city =  redlines.execute().set_crs("EPSG:4326")
 ```
+
+The purpose of the above codes is to help load and filter data to focus only on New Haven, specifically residential zones with redlining grades.
+This is signficant as it allows analysis of urban vegetation by historical redlining classifications.
+
++++
+
+Vegetation health is represented by the NDVI. This research aids in locating regions with different vegetation density according to redlining grade. In the past, redlining frequently resulted in environmental inequalities, with higher-grade communities having more vegetated areas.
 
 ```{code-cell} ipython3
 city_stats = exact_extract("ndvi.tif", 
@@ -355,6 +397,9 @@ city_stats.head()
 ```{code-cell} ipython3
 city_stats.to_parquet("new_haven_stats.parquet")
 ```
+
+The above code helps calculate the mean NDVI for each redlined section of New Haven.
+This is significant because by linking redlining grades with NDVI values, we assess how historical redlining correlates with current vegetation health.
 
 ```{code-cell} ipython3
 # construct the rest of the ibis code to compute the average NDVI by grade
@@ -374,6 +419,5 @@ ndvi_by_grade = (
 ndvi_by_grade.execute()
 ```
 
-```{code-cell} ipython3
-
-```
+This aggregates NDVI values to find the mean NDVI for each redlining grade (A, B, C, D).
+This is signficant in showing how certain grades (like Grade A) shows up more than B and C. This step allows comparison of vegetation health across historical redlining grades.
