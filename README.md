@@ -5,8 +5,8 @@
 
 ## Team Members
 
-🦸
-🦹
+🦸 Olivia Xu
+🦹 Sophia Xu
 
 ## 🎓 Learning Objectives
 
